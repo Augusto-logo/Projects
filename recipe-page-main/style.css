@@ -1,0 +1,104 @@
+@charset "UTF-8";
+
+/* Colorss */
+:root{
+    --cor2: #83432E;
+    --cor3: #75153A;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+}
+@font-face {
+    font-family: "young-serif";
+    src: url(assets/fonts/young-serif/YoungSerif-Regular.ttf);
+}
+@font-face {
+    font-family: "outfit";
+    src: url(assets/fonts/outfit/Outfit-VariableFont_wght.ttf);
+}
+
+body, html{
+    font-family: outfit;
+    font-weight: 400;
+}
+
+div#img{
+    background-image: url(assets/images/image-omelette.jpeg);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    height: 200px;
+}
+
+p{
+    /* text-align: left; */
+    font-weight: 400;
+    color: rgb(119, 119, 119);
+    margin: 30px;
+    font-size: 16px;
+}
+
+h1{
+    /* padding: 30px; */
+    font-family: young-serif;
+    font-size: 3em;
+    line-height: 1.1em;
+    margin: 30px;
+}
+
+h2{
+    margin: 30px;
+    font-family: young-serif;
+    font-weight: 500;
+    font-size: 2em;
+    color: var(--cor2);
+    
+}
+
+h3{
+    color: var(--cor3);
+    padding-top: 20px;
+    padding-left: 30px;
+}
+ul{
+    margin-left: 50px;
+    color: var(--cor2);
+    
+}
+
+li > p{
+    margin-left: 10px;
+}
+
+div#Preparation{
+    padding-bottom: 15px;
+    margin: 30px;
+    background-color: #FFF7FC;
+}
+
+ol{
+    margin-left: 50px;
+    color: var(--cor2);
+    font-weight: bold;
+}
+
+table{
+    margin: 30px;
+    text-align: center;
+}
+
+table th {
+    font-family: outfit;
+    font-weight: normal;
+    color: rgb(119, 119, 119);
+}
+
+table  td{
+    color: var(--cor2);
+    font-weight: bold;
+}
+
+
+
