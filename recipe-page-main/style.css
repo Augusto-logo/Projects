@@ -84,21 +84,20 @@ ol{
     font-weight: bold;
 }
 
-table{
-    margin: 30px;
-    text-align: center;
+div#container{
+    display: flex;
+    margin-left: 50px;
 }
 
-table th {
-    font-family: outfit;
-    font-weight: normal;
-    color: rgb(119, 119, 119);
+div#tableCategory{
+    display: auto;
 }
 
-table  td{
-    color: var(--cor2);
+div#tableInfo{
+    display: auto;
+}
+
+div#tableInfo > p{
+    color: #83432E;
     font-weight: bold;
 }
-
-
-
