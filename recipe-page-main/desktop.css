@@ -1,0 +1,20 @@
+@charset "UTF-8";
+
+/* DESKTOP SCREEN> 375px*/
+
+@media screen and (min-width: 555px) {
+    body{
+        background-color: #F3E5D8;
+    }
+    main{
+        margin: 15vh 20vw;
+        background-color: white;
+        border-radius: 15px;
+        padding-top: 30px;
+    }
+    div#img{
+        margin: auto;
+        border-radius: 15px;
+        width: 90%;
+    }
+}

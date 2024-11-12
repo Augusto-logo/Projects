@@ -6,7 +6,7 @@
 
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
   <link rel="stylesheet" href="style.css" media="all"> <!-- Mobile First-->
-  
+  <link rel="stylesheet" href="desktop.css">
   <title>Frontend Mentor | Recipe page</title>
 
   <!-- Feel free to remove these styles or customise in your own stylesheet 👍 -->
@@ -79,22 +79,7 @@
   
   <div class="attribution">
     Challenge by <a href="https://www.frontendmentor.io?ref=challenge" target="_blank">Frontend Mentor</a>. 
-    Coded by <a href="#">Your Name Here</a>.
+    Coded by <a href="#">Augusto</a>.
   </div>
 </body>
-<script>
-  // Salva a posição ao fechar ou recarregar
-window.addEventListener("beforeunload", function () {
-    localStorage.setItem("scrollPosition", window.scrollY);
-});
-
-// Restaura a posição ao abrir ou atualizar
-window.addEventListener("load", function () {
-    const scrollPosition = localStorage.getItem("scrollPosition");
-    if (scrollPosition) {
-        window.scrollTo(0, scrollPosition);
-    }
-});
-
-</script>
 </html>
