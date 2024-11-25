@@ -1,0 +1,1 @@
+A página de referências ficou inacadaba, ela serviria com links para artigos, onde o usuário conseguiria acessar mais informações.
