@@ -1,3 +1,5 @@
+// import { LerDados } from './teste';
+
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
 // Função para mandar MediaType(PDF, foto, etc)
@@ -33,7 +35,7 @@ client.on('message_create', message => {
 //Função para retorno de texto
 client.on('message_create', message => {
 	if (message.body.toLowerCase() === 'boletim') {
-        text = "Informe seu telefone e nome do aluno"
+        text = "Informe seu telefone e nome do aluno!"
 		// send back "pong" to the chat the message was sent in
 		client.sendMessage(message.from, text);
 	}
@@ -41,9 +43,16 @@ client.on('message_create', message => {
 
 // Função pra retorno de imagem
 client.on('message', async (msg) => {
-    if (msg.body.toLowerCase() === 'pdf') {
-        const media = MessageMedia.fromFilePath('image/WEB CSS degradê_1.png');
+    if (msg.body === 'media') {
+        const media = new MessageMedia('image.png', base64Image);
         await client.sendMessage(msg.from, media);
     }
 });
 
+// Função para retorno de PDF
+client.on('message', async (msg) => {
+    if (msg.body === 'pdf') {
+        const media = new MessageMedia('Assets/BoletimSingular.pdf', base64PDF, 'PDF');
+        await client.sendMessage(msg.from, media);
+    }
+});
