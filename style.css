@@ -2,7 +2,7 @@
 
 :root{
     --cor0: #FAE0C0;
-    --cor1: #A38867;
+    --cor1: #ebc596;
     --cor2: #7C6446;
 }
 
@@ -41,13 +41,14 @@ nav ul li {
 }
 
 a{
-    color: var(--cor0);
+    color: white;
     text-decoration: none;
     margin: 0 10px;
 }
 a:hover{
-    color: var(--cor1);
-    background-color: var(--cor0);
+    color: #ff8800;
+    
+    /* background-color: var(--cor0); */
 }
 
 main{
@@ -102,7 +103,7 @@ section p {
 }
 
 section p > a{
-    color: var(--cor0);
+    color: var(--cor2);
     text-decoration: none;
 }
 
