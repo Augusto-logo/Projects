@@ -2,7 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 let cors = require("cors");
-const { PDFDocument } = require('pdf-lib');
+
 
 // Módulos para manipulação dos arquivos e pastas
 const fs = require('fs');
@@ -26,9 +26,11 @@ const verificaDiretorio = (diretorio) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const ano = new Date().getFullYear().toString();// Ano atual
+        const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString(); // Trimestre atual
 
-        const folderName = file.originalname; // Nome da subpasta vindo do corpo da requisição
-        const uploadPath = path.join(__dirname, 'uploads', ano,  folderName);
+        const folderName = req.body.folderName; // Nome da subpasta vindo do corpo da requisição
+
+        const uploadPath = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre', folderName); // Caminho para salvar o arquivo
     
         verificaDiretorio(uploadPath); // Verifica e cria a pasta
     
@@ -41,36 +43,20 @@ const storage = multer.diskStorage({
     
 const upload = multer({ storage });
 
-const desmembraPDF = async (req, res, next) => {
-    const file = req.file;
-
-    if (!file) {
-        return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
-    }
-
-    try {
-        const pdfDoc = await PDFDocument.load(fs.readFileSync(file.path));
-        // Manipule o PDF aqui (divida, renomeie, etc.)
-        // Exemplo: Renomear o arquivo
-        const novoNome = `novo_${file.originalname}`;
-        const novoCaminho = path.join(path.dirname(file.path), novoNome);
-
-        fs.renameSync(file.path, novoCaminho);
-
-        // Atualize o caminho do arquivo no req.file
-        req.file.path = novoCaminho;
-        req.file.filename = novoNome;
-
-        next();
-    } catch (error) {
-        return res.status(500).json({ error: 'Erro ao manipular o arquivo PDF' });
-    }
+// Middleware para processar o upload de múltiplos arquivos
+const processarUpload = (req, res) => {
+    const uploadMultiple = upload.array('files');
+    uploadMultiple(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+    });
 };
 
 // Rota para upload de arquivos
-app.post('/upload', desmembraPDF, upload.single('file'), (req, res) => {
+app.post('/upload', upload.single('file'), (req, res) => {
     const ano = new Date().getFullYear();
-    res.json({ message: 'Upload realizado com sucesso', filePath: `/uploads/${ano}/${req.file.filename}` });
+    res.json({ message: 'Upload realizado com sucesso', filePath: `/uploads/${ano}/4 º trimestre/${req.file.filename}` });
 });
 
 // Servindo a pasta "uploads" de forma estática para acessar os arquivos enviados
