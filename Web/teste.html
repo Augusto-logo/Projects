@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+    <title>Formulário</title>
+</head>
+
+<body>
+    <main>
+        <h1>Envie seu arquivo PDF</h1>
+        <form id="uploadForm">
+            <input type="file" id="pdfFile" accept="application/pdf" required />
+            <button type="submit">Enviar</button>
+        </form>
+    </main>
+    </script>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('pdfFile');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('Arquivo enviado com sucesso: ' + result.filePath);
+                } else {
+                    alert('Erro no envio do arquivo');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro no envio do arquivo');
+            }
+        });
+    </script>
+</body>
+
+</html>

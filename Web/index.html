@@ -32,9 +32,12 @@
             <input type="submit" value="Enviar">
             <br>
             <input type="reset" value="Limpar"> 
+
+            <input type="file" name="arquivo" id="arquivo"  accept="application/pdf">
         </form>
     </main>
     <script type="module">
+        import { PDFDocument } from 'pdf-lib'
         // Armazena os dados do formulário
         const formAluno = document.getElementById('Form');
 
@@ -44,13 +47,30 @@
             const formData = new FormData(formAluno);
             const data = Object.fromEntries(formData);
 
-            fetch('http://localhost:3000/receber-dados', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            }).then(res => res.text()).then(response => console.log(response));
+            const fileInput = document.getElementById('arquivo');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const arrayBuffer = e.target.result;
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+                    // Manipule o PDF aqui, se necessário
+
+                    const pdfBytes = await pdfDoc.save();
+                    data.pdf = pdfBytes;
+
+                    fetch('http://localhost:3000/receber-dados', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    }).then(res => res.text()).then(response => console.log(response));
+                };
+                reader.readAsArrayBuffer(file);
+            }
         });
     </script>
 </body>
