@@ -14,11 +14,13 @@
         <form id="Form" action="" method="post">
             <label for="turma">Turma</label>
             <select name="turma" id="turma" required>
-                <option value="1A">turma</option>
+                <option value="">Selecione uma turma</option>
             </select>
 
             <label for="nome">Nome completo</label>
-            <input type="text" name="nome" id="nome" value="Augusto" required>
+            <select name="nome" id="nome" required>
+                <option value="">Selecione um nome</option>
+            </select>
 
             <label for="telefone">Telefone</label>
             <input type="text" name="telefone" id="telefone" value="553398605771" required placeholder="3389898989">
@@ -42,16 +44,42 @@
             fetch('http://localhost:3000/carrega-turmas')
                 .then(response => response.json())
                 .then(data => {
-                    const select = document.getElementById('turma');
+                    const selectTurma = document.getElementById('turma');
                     data.forEach(turma => {
                         const option = document.createElement('option');
                         option.value = turma.value;
                         option.textContent = turma.label;
-                        select.appendChild(option);
+                        selectTurma.appendChild(option);
+                    });
+
+                    selectTurma.addEventListener('change', function() {
+                        fetchNomesAlunos(selectTurma.value);
                     });
                 })
                 .catch(error => console.error('Erro ao buscar turmas:', error));
         }
+        function fetchNomesAlunos(turma) {
+            fetch(`http://localhost:3000/carrega-nomes?turma=${turma}`)
+                .then(response => response.json())
+                .then(data => {
+                    const selectNome = document.getElementById('nome');
+                    selectNome.innerHTML = ''; // Limpa as opções anteriores
+                    data.forEach(nome => {
+                        const option = document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        selectNome.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Erro ao buscar nomes dos alunos:', error));
+        }
+
+
+
+
+
+
+
 
         const formAluno = document.getElementById('Form');
 

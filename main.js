@@ -97,6 +97,19 @@ function lerPastas(diretorio) {
     }
 }
 
+// Função que retorna os arquivos de um diretório
+function lerArquivos(diretorio) {
+    try {
+        const arquivos = fs.readdirSync(diretorio, { withFileTypes: true })
+            .filter(dirent => dirent.isFile())
+            .map(dirent => dirent.name);
+        return arquivos;
+    } catch (err) {
+        console.error('Erro ao ler arquivos:', err);
+        return [];
+    }
+}
+
 
 // Rota para enviar dados do formulário
 // Dados para o preenchimento da turma e dos nomes
@@ -106,6 +119,15 @@ app.get('/carrega-turmas', async (req, res) => {
     const turmas = subpastas.map(turma => ({ value: turma, label: turma }));
     res.json(turmas);
     console.log(turmas); // Saída: [{ value: 'A1A', label: 'A1A' }, { value: 'I1A', label: 'I1A' }]
+});
+
+app.get('/carrega-nomes', async (req, res) => {
+    const turma = req.query.turma;
+    const diretorio = path.join(__dirname, 'uploads', '2024', '4º trimestre', turma);
+    const arquivos = lerArquivos(diretorio);
+    const nomes = arquivos.map(arquivo => arquivo.replace('.pdf', '')); // Remove a extensão .pdf
+    res.json(nomes);
+    console.log(nomes); // Saída: ['P1', 'P2', 'P3'] ou ['P4', 'P5', 'P6']
 });
 
 // Inicia o servidor
