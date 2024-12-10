@@ -28,8 +28,11 @@ const storage = multer.diskStorage({
         const ano = new Date().getFullYear().toString();// Ano atual
         const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString(); // Trimestre atual
 
-        const folderName = req.body.folderName; // Nome da subpasta vindo do corpo da requisição
-
+        let folderName = req.body.folderName; // Nome da subpasta vindo do corpo da requisição
+        folderName = folderName.replace(/\.pdf$/, "");
+        console.log(folderName);
+        // ***Verificar se é possível apenas botar o replace no const folderName
+        
         const uploadPath = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre', folderName); // Caminho para salvar o arquivo
     
         verificaDiretorio(uploadPath); // Verifica e cria a pasta
@@ -78,6 +81,31 @@ app.post('/receber-dados', async (req, res) => {
         console.log('Nenhum arquivo recebido');
         res.status(400).send('Nenhum arquivo recebido');
     }
+});
+
+
+// FUnção para achar o diretório de pastas
+function lerPastas(diretorio) {
+    try {
+        const subpastas = fs.readdirSync(diretorio, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        return subpastas;
+    } catch (err) {
+        console.error('Erro ao ler diretório:', err);
+        return [];
+    }
+}
+
+
+// Rota para enviar dados do formulário
+// Dados para o preenchimento da turma e dos nomes
+app.get('/carrega-turmas', async (req, res) => {
+    const diretorio = path.join(__dirname, 'uploads', '2024', '4º trimestre');
+    const subpastas = lerPastas(diretorio);
+    const turmas = subpastas.map(turma => ({ value: turma, label: turma }));
+    res.json(turmas);
+    console.log(turmas); // Saída: [{ value: 'A1A', label: 'A1A' }, { value: 'I1A', label: 'I1A' }]
 });
 
 // Inicia o servidor

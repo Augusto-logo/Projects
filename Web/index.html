@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
     <title>Formulário</title>
 </head>
 <body>
@@ -12,15 +14,7 @@
         <form id="Form" action="" method="post">
             <label for="turma">Turma</label>
             <select name="turma" id="turma" required>
-                <option value="1A">1º A</option>
-                <option value="1B">1º B</option>
-                <option value="1C">1º C</option>
-                <option value="2A">2º A</option>
-                <option value="2B">2º B</option>
-                <option value="2C">2º C</option>
-                <option value="3A">3º A</option>
-                <option value="3B">3º B</option>
-                <option value="3C">3º C</option>
+                <option value="1A">turma</option>
             </select>
 
             <label for="nome">Nome completo</label>
@@ -37,9 +31,35 @@
         </form>
     </main>
     <script type="module">
-        import { PDFDocument } from 'pdf-lib'
+        const { PDFDocument } = PDFLib
         // Armazena os dados do formulário
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTurmas();
+        });
+
+        function fetchTurmas() {
+            fetch('http://localhost:3000/carrega-turmas')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('turma');
+                    data.forEach(turma => {
+                        const option = document.createElement('option');
+                        option.value = turma.value;
+                        option.textContent = turma.label;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Erro ao buscar turmas:', error));
+        }
+
         const formAluno = document.getElementById('Form');
+
+
+
+
+
+
 
         formAluno.addEventListener('submit', (event) => {
             event.preventDefault();
