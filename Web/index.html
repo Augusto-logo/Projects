@@ -33,13 +33,12 @@
         </form>
     </main>
     <script type="module">
+        // Importações e constantes
         const { PDFDocument } = PDFLib
-        // Armazena os dados do formulário
+        const formAluno = document.getElementById('Form'); // FormulárioHTML
 
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchTurmas();
-        });
-
+        // **Funções
+        // Busca as turmas cadastradas no sistema
         function fetchTurmas() {
             fetch('http://localhost:3000/carrega-turmas')
                 .then(response => response.json())
@@ -58,6 +57,7 @@
                 })
                 .catch(error => console.error('Erro ao buscar turmas:', error));
         }
+        // Busca os nomes dos alunos de uma turma já cadastrada
         function fetchNomesAlunos(turma) {
             fetch(`http://localhost:3000/carrega-nomes?turma=${turma}`)
                 .then(response => response.json())
@@ -73,22 +73,13 @@
                 })
                 .catch(error => console.error('Erro ao buscar nomes dos alunos:', error));
         }
-
-
-
-
-
-
-
-
-        const formAluno = document.getElementById('Form');
-
-
-
-
-
-
-
+        
+        // **Eventos
+        // Carrega as turmas ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTurmas();
+        });
+        // Envia os dados do formulário para o envio do arquivo para o WPP
         formAluno.addEventListener('submit', (event) => {
             event.preventDefault();
 
@@ -103,8 +94,6 @@
                 reader.onload = async (e) => {
                     const arrayBuffer = e.target.result;
                     const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-                    // Manipule o PDF aqui, se necessário
 
                     const pdfBytes = await pdfDoc.save();
                     data.pdf = pdfBytes;
