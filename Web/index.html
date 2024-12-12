@@ -11,7 +11,7 @@
 <body>
     <h1>Formulário Aluno</h1>
     <main>
-        <form id="Form" action="" method="post">
+        <form id="Form" action="" method="post" autocomplete="off">
             <label for="turma">Turma</label>
             <select name="turma" id="turma" required>
                 <option value="">Selecione uma turma</option>
@@ -23,23 +23,21 @@
             </select>
 
             <label for="telefone">Telefone</label>
-            <input type="text" name="telefone" id="telefone" value="553398605771" required placeholder="3389898989">
+            <input type="text" name="telefone" id="telefone" value="" required placeholder="(DDD) xxxx-xxxx">
 
             <input type="submit" value="Enviar">
             <br>
-            <input type="reset" value="Limpar"> 
-
-            <input type="file" name="arquivo" id="arquivo"  accept="application/pdf">
+            <input id="reset" type="reset" value="Limpar"> 
+            <button id="btnBoletim">Adicionar Boletim da Turma</button>
         </form>
     </main>
-    <script type="module">
-        // Importações e constantes
+    <script>
         const { PDFDocument } = PDFLib
-        const formAluno = document.getElementById('Form'); // FormulárioHTML
+        const formAluno = document.getElementById('Form'); 
 
         // **Funções
         // Busca as turmas cadastradas no sistema
-        function fetchTurmas() {
+        function carregaTurmas() {
             fetch('http://localhost:3000/carrega-turmas')
                 .then(response => response.json())
                 .then(data => {
@@ -52,18 +50,19 @@
                     });
 
                     selectTurma.addEventListener('change', function() {
-                        fetchNomesAlunos(selectTurma.value);
+                        carregaAlunos(selectTurma.value);
                     });
                 })
-                .catch(error => console.error('Erro ao buscar turmas:', error));
+                .catch(error => console.error('Erro ao buscar as turmas:', error));
         }
         // Busca os nomes dos alunos de uma turma já cadastrada
-        function fetchNomesAlunos(turma) {
+        function carregaAlunos(turma) {
             fetch(`http://localhost:3000/carrega-nomes?turma=${turma}`)
                 .then(response => response.json())
                 .then(data => {
                     const selectNome = document.getElementById('nome');
-                    selectNome.innerHTML = ''; // Limpa as opções anteriores
+                    selectNome.innerHTML = '';
+
                     data.forEach(nome => {
                         const option = document.createElement('option');
                         option.value = nome;
@@ -71,43 +70,107 @@
                         selectNome.appendChild(option);
                     });
                 })
-                .catch(error => console.error('Erro ao buscar nomes dos alunos:', error));
+                .catch(error => console.error('Erro ao buscar os nomes dos alunos:', error));
         }
         
         // **Eventos
         // Carrega as turmas ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
-            fetchTurmas();
+            carregaTurmas();
         });
-        // Envia os dados do formulário para o envio do arquivo para o WPP
+        // Envia os dados do formulário para enviar o arquivo para o WPP
         formAluno.addEventListener('submit', (event) => {
             event.preventDefault();
 
             const formData = new FormData(formAluno);
             const data = Object.fromEntries(formData);
 
-            const fileInput = document.getElementById('arquivo');
-            const file = fileInput.files[0];
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const arrayBuffer = e.target.result;
-                    const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-                    const pdfBytes = await pdfDoc.save();
-                    data.pdf = pdfBytes;
-
-                    fetch('http://localhost:3000/receber-dados', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    }).then(res => res.text()).then(response => console.log(response));
-                };
-                reader.readAsArrayBuffer(file);
+            try{
+                fetch('http://localhost:3000/receber-dados', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(alert('Arquivo enviado com sucesso'));
+            } catch (error) {
+                console.error('Erro no envio do formulário', error);
             }
+        });
+        
+        // Tela para envio do arquivo de boletim pro servidor
+        document.getElementById('btnBoletim').addEventListener('click', function() {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+
+            // campos do arquivo
+            const file = document.createElement('input');
+            file.type = 'file';
+            file.id = 'boletimFile';
+            file.accept = 'application/pdf';
+
+            const btnEnviar = document.createElement('button');
+            btnEnviar.textContent = 'Enviar';
+            btnEnviar.addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                // Estruturas do PDF-lib e PDFjs para manuseio de arquivos
+                const fileInput = document.getElementById('boletimFile');
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(arrayBuffer);
+                const pdfPages = pdfDoc.getPageCount();
+
+                const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
+
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                const pdf = await loadingTask.promise;
+
+                for (let i = 0; i < pdfPages; i++) {
+                    const newPdfDoc = await PDFDocument.create();
+                    const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [i]);
+                    newPdfDoc.addPage(copiedPage);
+
+                    const pdfBytes = await newPdfDoc.save();
+                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                    // Extrai o texto da página e usa para nomear o arquivo
+                    const page = await pdf.getPage(i + 1);
+                    const textContent = await page.getTextContent();
+                    const textItems = textContent.items;
+    
+                    let nomeArquivo = textItems[2].str;
+                    nomeArquivo = nomeArquivo.slice(11).toUpperCase() + '.pdf';
+                
+                    const formData = new FormData();
+                    formData.append('folderName', file.name);
+                    formData.append('file', blob, nomeArquivo);
+
+                    await fetch('http://localhost:3000/upload',{
+                        method: 'POST',
+                        body: formData,
+                    }).then(() => {
+                        alert('Arquivo enviado com sucesso');
+                        document.body.removeChild(overlay); 
+                    }).catch(error => console.error('Erro ao enviar o arquivo:', error));
+                }
+            });
+
+            const btnClose = document.createElement('button');
+            btnClose.textContent = 'Fechar';
+            btnClose.addEventListener('click', function() {
+                document.body.removeChild(overlay);
+            });
+
+            // appends do HTML
+            popup.appendChild(file);
+            popup.appendChild(btnEnviar);
+            popup.appendChild(btnClose);
+            overlay.appendChild(popup);
+            document.body.appendChild(overlay);
         });
     </script>
 </body>

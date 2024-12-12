@@ -2,6 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 let cors = require("cors");
+const qrcode = require('qrcode-terminal');
 
 const app = express();
 const port = 3000;
@@ -13,24 +14,31 @@ app.use(express.json({ limit: '50mb' }));
 const fs = require('fs');
 const path = require('path');
 
+// Modulos relacionados ao whatsapp-web.js
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const { MessageMedia } = require('whatsapp-web.js');
+const client = new Client({
+    authStrategy: new LocalAuth()
+});
+
+
 // **Funções
 // Função para verificar se o diretório existe e, caso não exista, criar ele e as subpastas
 const verificaDiretorio = (diretorio) => {
     if (!fs.existsSync(diretorio)) {
-      fs.mkdirSync(diretorio, { recursive: true }); // Recursive cria a pasta e subpastas, se necessário.
+      fs.mkdirSync(diretorio, { recursive: true });
     }
   };
 // Função para configurar os dados para o multer salvar os arquivos.
 // path(upload/ano/trimestre/nomeDaTurma)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const ano = new Date().getFullYear().toString(); // Ano atual
-        const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString(); // Trimestre atual
+        const ano = new Date().getFullYear().toString();
+        const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString();
 
-        let folderName = req.body.folderName; // Nome da subpasta vindo do corpo da requisição
-        folderName = folderName.replace(/\.pdf$/, "");
+        let folderName = req.body.folderName.replace(/\.pdf$/, ""); // Nome da subpasta vindo do corpo da requisição
+
         console.log(folderName);
-        // ***Verificar se é possível apenas botar o replace no const folderName
         
         const uploadPath = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre', folderName); // Caminho para salvar o arquivo
     
@@ -44,16 +52,6 @@ const storage = multer.diskStorage({
     });
     
 const upload = multer({ storage });
-
-// Não está sendo utilizada(REMOVER)
-const processarUpload = (req, res) => {
-    const uploadMultiple = upload.array('files');
-    uploadMultiple(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-    });
-};
 
 // Função para achar o diretório
 // A função verifica se cada etapa do path é uma diretório existente, gerando uma lista do path fornecido
@@ -86,52 +84,82 @@ function lerArquivos(diretorio) {
 // **ROTAS
 // ROTAS PARA UPLOAD DOS ARQUIVOS
 
-// Salva um arquivo 
+// Salva um arquivo na pasta "uploads" com a estrutura "ano/trimestre/nomeDaTurma"
 app.post('/upload', upload.single('file'), (req, res) => {
     
     const ano = new Date().getFullYear();
-    res.json({ message: 'Upload realizado com sucesso', filePath: `/uploads/${ano}/4 º trimestre/${req.file.filename}` });
+    const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString();
+
+    res.json({ message: 'Upload realizado com sucesso', filePath: `/uploads/${ano}/${trimestre}º trimestre/${req.file.filename}`});
 });
+
 // Servindo a pasta "uploads" de forma estática para acessar os arquivos enviados
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// Rota para receber dados via POST
+
+// Rota para enviar os dados para o número de telefone
 app.post('/receber-dados', async (req, res) => {
-    // Recebe os dados enviados
     const data = req.body;
-    const file = req.file;
-
     console.log('Dados recebidos:', data);
-    console.log('Arquivo recebido:', file);
 
-    if (file) {
-        console.log('Arquivo recebido com sucesso:', file.originalname);
-        res.status(200).send('Dados e arquivo recebidos com sucesso');
+    const ano = new Date().getFullYear();
+    const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString();
+
+    const arquivo = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre', data.turma, data.nome + '.pdf');
+
+    if (fs.existsSync(arquivo)) {
+        // Monta a estrutura do número de telefone.
+        // cria um objeto de media para enviar o arquivo.
+        // chama a função de envio de mensagem.
+        const telefone = '55' + data.telefone + '@c.us';
+        const media = MessageMedia.fromFilePath(arquivo);
+        await client.sendMessage(telefone, media);
+        res.status(200).send('Arquivo enviado com sucesso');
     } else {
         console.log('Nenhum arquivo recebido');
         res.status(400).send('Nenhum arquivo recebido');
     }
 });
 
-// Rota para enviar dados do formulário
-// Dados para o preenchimento da turma e dos nomes
+// Rota para enviar dados para o formulário
+// Dados para o preenchimento da turma
 app.get('/carrega-turmas', async (req, res) => {
-    const diretorio = path.join(__dirname, 'uploads', '2024', '4º trimestre');
+    const ano = new Date().getFullYear();
+    const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString();
+
+    const diretorio = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre');
     const subpastas = lerPastas(diretorio);
     const turmas = subpastas.map(turma => ({ value: turma, label: turma }));
     res.json(turmas);
-    console.log(turmas); // Saída: [{ value: 'A1A', label: 'A1A' }, { value: 'I1A', label: 'I1A' }]
+    console.log(turmas); 
 });
-
+// Dados para o preenchimento dos nomes dos alunos
 app.get('/carrega-nomes', async (req, res) => {
+    const ano = new Date().getFullYear();
+    const trimestre = Math.floor((new Date().getMonth() + 3) / 3).toString();
+
     const turma = req.query.turma;
-    const diretorio = path.join(__dirname, 'uploads', '2024', '4º trimestre', turma);
+    const diretorio = path.join(__dirname, 'uploads', ano, trimestre + 'º trimestre', turma);
     const arquivos = lerArquivos(diretorio);
-    const nomes = arquivos.map(arquivo => arquivo.replace('.pdf', '')); // Remove a extensão .pdf
+    const nomes = arquivos.map(arquivo => arquivo.replace('.pdf', '')); 
     res.json(nomes);
-    console.log(nomes); // Saída: ['P1', 'P2', 'P3'] ou ['P4', 'P5', 'P6']
+    console.log(nomes);
 });
 
-// Start do servidor
+// Starts do servidor
 app.listen(port, () => {
     console.log(`Servidor escutando em http://localhost:${port}`);
 });
+
+client.once('ready', () => {
+    console.log('Client is ready!');
+});
+
+client.on('qr', (qr) => {
+    qrcode.generate(qr, {small: true});
+    console.log('QR RECEIVED', qr);
+});
+
+client.on('message_create', message => {
+	console.log(message.body);
+});
+client.initialize();

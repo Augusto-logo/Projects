@@ -1,8 +1,0 @@
-{
-    "name": "Augusto",
-    "turma": "1A"
-}
-{
-    "name": "João",
-    "turma": "1B"
-}
